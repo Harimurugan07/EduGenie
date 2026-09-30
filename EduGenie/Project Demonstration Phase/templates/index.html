@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduGenie — AI Learning Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <div>
+        <span class="badge">AI Learning Assistant</span>
+        <h1>EduGenie</h1>
+        <p>Ask, understand, practice, summarize, and build a learning path.</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <label for="task">Choose a learning task</label>
+      <select id="task">
+        <option value="qa">Ask a Question</option>
+        <option value="explain">Explain a Concept</option>
+        <option value="quiz">Generate a Quiz</option>
+        <option value="summarize">Summarize Text</option>
+        <option value="learn">Recommend Learning Path</option>
+      </select>
+
+      <label for="inputText">Your input</label>
+      <textarea id="inputText" rows="10"
+        placeholder="For example: Explain the Pythagoras theorem with a simple example."></textarea>
+
+      <button id="submitBtn">Generate</button>
+      <p id="status" class="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card result-card">
+      <div class="result-heading">
+        <h2>Result</h2>
+        <button id="copyBtn" class="secondary" disabled>Copy</button>
+      </div>
+      <div id="result" class="result empty">Your result will appear here.</div>
+    </section>
+
+    <footer>
+      <span>EduGenie</span>
+      <a href="/docs" target="_blank" rel="noopener">API docs</a>
+      <a href="/health" target="_blank" rel="noopener">Health</a>
+    </footer>
+  </main>
+
+<script>
+const task = document.getElementById("task");
+const input = document.getElementById("inputText");
+const submit = document.getElementById("submitBtn");
+const result = document.getElementById("result");
+const statusEl = document.getElementById("status");
+const copyBtn = document.getElementById("copyBtn");
+
+const placeholders = {
+  qa: "Ask a question, e.g. What is photosynthesis?",
+  explain: "Enter a concept, e.g. Pythagoras theorem",
+  quiz: "Paste a passage or topic for a 3-question MCQ quiz.",
+  summarize: "Paste the educational passage you want summarized.",
+  learn: "Enter a topic, e.g. SQL from beginner to advanced."
+};
+
+task.addEventListener("change", () => {
+  input.placeholder = placeholders[task.value];
+});
+
+function escapeHtml(value) {
+  return value.replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+  }[c]));
+}
+
+function renderMarkdownish(text) {
+  return escapeHtml(text)
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/^### (.*)$/gm, "<h3>$1</h3>")
+    .replace(/^## (.*)$/gm, "<h2>$1</h2>")
+    .replace(/^- (.*)$/gm, "<li>$1</li>")
+    .replace(/\n/g, "<br>");
+}
+
+function renderQuiz(quiz) {
+  let html = "<div class='quiz'>";
+  quiz.questions.forEach((q, index) => {
+    html += `<div class="quiz-question"><h3>${index + 1}. ${escapeHtml(q.question)}</h3>`;
+    q.options.forEach(option => {
+      html += `<button class="option" data-answer="${escapeHtml(q.answer)}" data-option="${escapeHtml(option)}">${escapeHtml(option)}</button>`;
+    });
+    html += `<p class="explanation" hidden>${escapeHtml(q.explanation)}</p></div>`;
+  });
+  return html + "</div>";
+}
+
+function bindQuiz() {
+  document.querySelectorAll(".option").forEach(button => {
+    button.addEventListener("click", () => {
+      const question = button.closest(".quiz-question");
+      question.querySelectorAll(".option").forEach(b => b.disabled = true);
+      const correct = button.dataset.option === button.dataset.answer;
+      button.classList.add(correct ? "correct" : "wrong");
+      if (!correct) {
+        question.querySelectorAll(".option").forEach(b => {
+          if (b.dataset.option === b.dataset.answer) b.classList.add("correct");
+        });
+      }
+      question.querySelector(".explanation").hidden = false;
+    });
+  });
+}
+
+task.dispatchEvent(new Event("change"));
+
+submit.addEventListener("click", async () => {
+  const text = input.value.trim();
+  if (!text) {
+    statusEl.textContent = "Please enter some text first.";
+    return;
+  }
+
+  const endpoint = {
+    qa: "/qa",
+    explain: "/explain",
+    quiz: "/quiz",
+    summarize: "/summarize",
+    learn: "/learn/recommendations"
+  }[task.value];
+
+  submit.disabled = true;
+  copyBtn.disabled = true;
+  statusEl.textContent = "Thinking…";
+  result.className = "result loading";
+  result.textContent = "EduGenie is generating your answer…";
+
+  try {
+    const body = task.value === "qa" ? { question: text } : { text };
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || "Request failed.");
+
+    result.className = "result";
+    if (task.value === "quiz") {
+      result.innerHTML = renderQuiz(data.result);
+      bindQuiz();
+    } else {
+      result.innerHTML = renderMarkdownish(data.result);
+    }
+    copyBtn.disabled = false;
+    statusEl.textContent = "Done.";
+  } catch (error) {
+    result.className = "result error";
+    result.textContent = error.message;
+    statusEl.textContent = "Request failed.";
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+copyBtn.addEventListener("click", async () => {
+  await navigator.clipboard.writeText(result.innerText);
+  statusEl.textContent = "Copied.";
+});
+</script>
+</body>
+</html>

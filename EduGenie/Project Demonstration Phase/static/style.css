@@ -1,0 +1,39 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #172033;
+  background: #f4f7fb;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.container { width: min(960px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0; }
+.hero { margin-bottom: 24px; }
+.badge { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #e8efff; color: #3159bd; font-size: 12px; font-weight: 700; }
+h1 { font-size: clamp(38px, 7vw, 64px); margin: 10px 0 4px; letter-spacing: -2px; }
+.hero p { margin: 0; color: #61708b; font-size: 18px; }
+.card { background: white; border: 1px solid #e3e8f0; border-radius: 18px; padding: 24px; margin-top: 18px; box-shadow: 0 10px 30px rgba(25, 40, 70, .06); }
+label { display: block; font-weight: 700; margin: 12px 0 8px; }
+select, textarea { width: 100%; border: 1px solid #cfd7e5; border-radius: 12px; padding: 12px; font: inherit; background: #fff; }
+textarea { resize: vertical; min-height: 180px; }
+button { border: 0; border-radius: 11px; padding: 12px 18px; font: inherit; font-weight: 700; cursor: pointer; background: #3159bd; color: white; margin-top: 14px; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+.secondary { background: #eef2f8; color: #24324a; padding: 8px 12px; margin: 0; }
+.status { min-height: 22px; color: #61708b; margin-bottom: 0; }
+.result-heading { display: flex; justify-content: space-between; align-items: center; }
+.result-heading h2 { margin: 0; }
+.result { line-height: 1.7; color: #29354a; }
+.result.empty, .loading { color: #73809a; }
+.error { color: #a32626; background: #fff3f3; padding: 12px; border-radius: 10px; }
+.result li { margin: 6px 0; }
+.quiz-question { border-top: 1px solid #e6ebf2; padding: 18px 0; }
+.quiz-question:first-child { border-top: 0; }
+.quiz-question h3 { margin-top: 0; }
+.option { display: block; width: 100%; text-align: left; background: #f1f4f9; color: #27344c; margin: 8px 0; }
+.option.correct { background: #dff5e5; color: #166534; }
+.option.wrong { background: #ffe3e3; color: #991b1b; }
+.explanation { background: #f7f9fc; padding: 10px 12px; border-radius: 8px; }
+footer { display: flex; gap: 18px; padding: 24px 4px; color: #6a7890; font-size: 14px; }
+footer a { color: inherit; }
+@media (max-width: 600px) {
+  .container { padding: 24px 0; }
+  .card { padding: 18px; }
+}
